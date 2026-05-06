@@ -1,0 +1,15 @@
+graph TD
+    Start((Start)) --> Process1[User enters Mermaid Syntax]
+    Process1 --> Decision{Valid Syntax?}
+    Decision -- Yes --> Render[Render Diagram]
+    Decision -- No --> Error[Show Error Message]
+    Render --> End((Success))
+    
+    subgraph Legend
+        Start
+        Process1
+        Decision
+        Render
+        Error
+        End
+    end
