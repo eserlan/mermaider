@@ -200,23 +200,58 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
-  .page { padding: 0; }
+  .page {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+  }
   .panel {
     border-radius: 0;
-    border-left: none;
-    border-right: none;
-    padding: 12px 10px;
+    border: none;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+  .panel p {
+    display: none; /* Hide description on mobile */
+  }
+  .panel h1 {
+    font-size: 1.1rem;
+  }
+  .header-actions {
+    gap: 8px;
+    margin-top: 8px;
+  }
+  button, .file-picker {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 0.85rem;
+  }
+  .source-info {
+    font-size: 0.75rem;
+    width: 100%;
+    order: -1;
+    margin-bottom: 4px;
   }
   .diagram-wrap {
+    flex: 1; /* Take up remaining height */
     border-radius: 12px;
-    margin-top: 12px;
-    padding: 8px;
+    margin-top: 10px;
+    padding: 4px;
   }
   .controls {
-    right: 12px;
-    bottom: 12px;
-    scale: 0.85;
+    right: 8px;
+    bottom: 8px;
+    gap: 6px;
+    padding: 6px 8px;
+    scale: 0.8;
     transform-origin: right bottom;
+  }
+  .status {
+    padding: 4px 10px;
+    font-size: 0.75rem;
+    margin-top: 8px;
   }
 }
 
