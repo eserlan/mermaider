@@ -47,11 +47,18 @@
             Open File
             <input id="filePicker" type="file" class="file-input" accept=".mmd,.md,.mermaid,.txt" />
           </label>
+          <button id="renderInput" class="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-emerald-600 bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-emerald-700 sm:h-10 sm:flex-none">Render Paste</button>
+          <button id="clearDiagram" class="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 sm:h-10 sm:flex-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">Clear</button>
           <button id="savePng" class="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 sm:h-10 sm:flex-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">PNG</button>
           <button id="saveSvg" class="inline-flex h-11 flex-1 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 sm:h-10 sm:flex-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">SVG</button>
         </div>
         </div>
       </header>
+
+      <div id="inputPanel" class="hidden px-4 pb-4 sm:px-0 sm:pb-6">
+        <label for="mermaidInput" class="mb-2 block text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Paste Mermaid</label>
+        <textarea id="mermaidInput" spellcheck="false" placeholder="Paste Mermaid code here, then tap Render Paste." class="min-h-32 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-950"></textarea>
+      </div>
 
       <div class="diagram-wrap mx-0 flex min-h-[52vh] flex-1 justify-center overflow-auto border-y border-slate-200 bg-white p-2 sm:rounded-2xl sm:border sm:p-5 dark:border-slate-800 dark:bg-slate-950">
         <pre class="mermaid" id="diagramSource"></pre>
@@ -75,6 +82,10 @@
         path: document.getElementById('sourcePath'),
         status: document.getElementById('statusText'),
         picker: document.getElementById('filePicker'),
+        inputPanel: document.getElementById('inputPanel'),
+        input: document.getElementById('mermaidInput'),
+        renderInput: document.getElementById('renderInput'),
+        clear: document.getElementById('clearDiagram'),
         png: document.getElementById('savePng'),
         svg: document.getElementById('saveSvg'),
         zoomLabel: document.getElementById('zoomLabel'),
@@ -89,20 +100,47 @@
 
       mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
 
+      function setInputVisible(visible) {
+        elements.inputPanel.classList.toggle('hidden', !visible);
+        if (visible) elements.input.focus();
+      }
+
       function updateZoom() {
         const svg = elements.source.querySelector('svg');
-        if (!svg || !currentData.baseW) return;
+        if (!svg || !currentData.baseW) {
+          elements.zoomLabel.textContent = Math.round(currentData.zoom * 100) + '%';
+          return;
+        }
         svg.style.width = Math.round(currentData.baseW * currentData.zoom) + 'px';
         svg.style.height = Math.round(currentData.baseH * currentData.zoom) + 'px';
         elements.zoomLabel.textContent = Math.round(currentData.zoom * 100) + '%';
+      }
+
+      function clearDiagram() {
+        currentData = { name: '', text: '', zoom: 1, baseW: 0, baseH: 0 };
+        elements.source.innerHTML = '';
+        elements.input.value = '';
+        elements.path.textContent = 'Pasted or cleared';
+        document.title = 'Mermaid Viewer';
+        elements.wrap.scrollLeft = 0;
+        elements.wrap.scrollTop = 0;
+        setInputVisible(true);
+        updateZoom();
+        elements.status.textContent = 'Paste Mermaid to render';
       }
 
       async function render(text, name) {
         try {
           elements.status.textContent = 'Rendering...';
           const cleanText = text.trim().replace(/^```mermaid\s*|\s*```$/gi, '');
+          if (!cleanText) {
+            clearDiagram();
+            return;
+          }
           currentData.text = cleanText;
           currentData.name = name.split('/').pop();
+          elements.input.value = cleanText;
+          setInputVisible(false);
           elements.path.textContent = name;
           document.title = currentData.name + ' - Mermaid Viewer';
 
@@ -144,6 +182,13 @@
       elements.picker.onchange = async e => {
         const file = e.target.files[0];
         if (file) render(await file.text(), file.name);
+      };
+      elements.renderInput.onclick = () => render(elements.input.value, 'pasted.mmd');
+      elements.clear.onclick = () => clearDiagram();
+      elements.input.onkeydown = e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          render(elements.input.value, 'pasted.mmd');
+        }
       };
 
       // Drag & Drop
@@ -206,7 +251,14 @@
       };
 
       // Start
-      fetch(mermaidSourcePath).then(r => r.text()).then(t => render(t, mermaidSourcePath));
+      fetch(mermaidSourcePath)
+        .then(r => r.ok ? r.text() : Promise.reject(new Error('Unable to load ' + mermaidSourcePath)))
+        .then(t => render(t, mermaidSourcePath))
+        .catch(() => {
+          elements.path.textContent = 'Paste Mermaid or open a file';
+          elements.status.textContent = 'Press Clear to paste Mermaid';
+          updateZoom();
+        });
     })();
   </script>
 </body>
