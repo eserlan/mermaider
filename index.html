@@ -241,7 +241,7 @@
       <h1 id="pageTitle">Mermaid Viewer</h1>
       <p>Loads Mermaid from an external file. Use + and - to zoom.</p>
       <div class="header-actions">
-        <div class="source-info">Source: <span id="sourcePath">sales-process.mmd</span></div>
+        <div class="source-info">Source: <span id="sourcePath">demo.mmd</span></div>
         <label class="file-picker" for="filePicker">
           Open Mermaid file
           <input id="filePicker" type="file" accept=".mmd,.md,.mermaid,.txt" />
@@ -259,7 +259,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script>
-    const defaultSourcePath = 'sales-process.mmd';
+    const defaultSourcePath = 'demo.mmd';
     const sourceParams = new URLSearchParams(window.location.search);
     const mermaidSourcePath = sourceParams.get('src') || defaultSourcePath;
     const diagramWrap = document.querySelector('.diagram-wrap');
@@ -696,7 +696,7 @@
     }
 
     renderDiagram().catch((error) => {
-      diagramSource.outerHTML = `<pre style="color:#b91c1c; white-space:pre-wrap; padding:16px;">Failed to render Mermaid diagram.\n\n${error.message}</pre>`;
+      diagramSource.innerHTML = `<pre style="color:#b91c1c; white-space:pre-wrap; padding:16px;">Failed to render Mermaid diagram.\n\n${error.message}</pre>`;
       statusText.textContent = 'Mermaid failed to load';
     });
   </script>
