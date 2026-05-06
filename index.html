@@ -6,12 +6,8 @@
   <title>Mermaid Viewer</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style type="text/css">
-    /* Custom Tailwind Theme Extension */
-    @theme {
-      --color-panel: rgba(255, 255, 255, 0.9);
-      --color-panel-dark: rgba(30, 41, 59, 0.9);
-    }
-    
+    @custom-variant dark (&:where(.dark, .dark *));
+
     /* Smooth theme transitions */
     body { transition: background-color 0.3s ease, color 0.3s ease; }
     
