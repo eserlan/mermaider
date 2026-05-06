@@ -6,6 +6,7 @@
   <title>Mermaid Viewer</title>
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <style type="text/css">
+    /* Custom Tailwind Theme Extension */
     @theme {
       --color-panel: rgba(255, 255, 255, 0.9);
       --color-panel-dark: rgba(30, 41, 59, 0.9);
@@ -20,9 +21,10 @@
 
     /* Mermaid SVG scaling */
     .mermaid svg { display: block; max-width: none; height: auto; }
-  </script>
+  </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
+  <!-- Fixed Controls -->
   <div class="controls fixed right-4 bottom-4 md:right-6 md:bottom-6 z-50 flex items-center gap-2 p-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-xl scale-90 md:scale-100 origin-right-bottom">
     <button id="themeToggle" class="px-3 h-9 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold text-sm transition-all cursor-pointer">🌙 Dark</button>
     <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
@@ -34,6 +36,7 @@
 
   <div class="page p-0 sm:p-5 flex flex-col min-h-screen">
     <section class="main-panel panel flex flex-col flex-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-800 sm:rounded-2xl shadow-2xl transition-all overflow-hidden h-[100vh] sm:h-auto">
+      <!-- Header -->
       <div class="p-4 md:p-6 border-b border-slate-100 dark:border-slate-800">
         <h1 id="pageTitle" class="text-xl md:text-2xl font-bold tracking-tight">Mermaid Viewer</h1>
         <p class="hidden sm:block text-slate-500 dark:text-slate-400 text-sm mt-1">Drag & drop files or use the toolbar to explore diagrams.</p>
@@ -53,16 +56,226 @@
         </div>
       </div>
 
+      <!-- Diagram Area -->
       <div class="diagram-wrap flex-1 overflow-auto bg-white dark:bg-slate-950 p-4 cursor-grab active:cursor-grabbing">
         <pre class="mermaid mx-auto" id="diagramSource"></pre>
       </div>
 
+      <!-- Status Bar -->
       <div id="statusText" class="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 border-t border-slate-50 dark:border-slate-800">
         Ready
       </div>
     </section>
   </div>
 
-  <script type="module" src="script.js"></script>
+  <!-- Standard Mermaid UMD Script (Max compatibility) -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    (function() {
+      const defaultSourcePath = 'demo.mmd';
+      const sourceParams = new URLSearchParams(window.location.search);
+      const mermaidSourcePath = sourceParams.get('src') || defaultSourcePath;
+      const diagramWrap = document.querySelector('.diagram-wrap');
+      const diagramSource = document.getElementById('diagramSource');
+      const pageTitle = document.getElementById('pageTitle');
+      const sourcePath = document.getElementById('sourcePath');
+      const statusText = document.getElementById('statusText');
+      const filePicker = document.getElementById('filePicker');
+      const savePngButton = document.getElementById('savePng');
+      const saveSvgButton = document.getElementById('saveSvg');
+      const zoomLabel = document.getElementById('zoomLabel');
+      const zoomInButton = document.getElementById('zoomIn');
+      const zoomOutButton = document.getElementById('zoomOut');
+      const zoomResetButton = document.getElementById('zoomReset');
+      const themeToggle = document.getElementById('themeToggle');
+
+      const screenMermaidConfig = {
+        startOnLoad: false,
+        securityLevel: 'loose',
+        flowchart: { useMaxWidth: false, htmlLabels: true }
+      };
+      const exportMermaidConfig = {
+        startOnLoad: false,
+        securityLevel: 'loose',
+        flowchart: { useMaxWidth: false, htmlLabels: false }
+      };
+
+      let currentDiagramName = '';
+      let currentDiagramText = '';
+      let currentZoom = 1;
+      let baseWidth = 0, baseHeight = 0;
+      let isDragging = false;
+      let dragStartX = 0, dragStartY = 0;
+      let dragStartScrollLeft = 0, dragStartScrollTop = 0;
+
+      // Initialize Mermaid
+      mermaid.initialize(screenMermaidConfig);
+
+      function getFileName(path) {
+        return path.split('/').pop().split('\\').pop() || path;
+      }
+
+      async function loadDiagramSource(path) {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(`Could not load source: ${path}`);
+        return response.text();
+      }
+
+      function normalizeMermaidSource(sourceText) {
+        const trimmed = sourceText.trim();
+        const fencedMatch = trimmed.match(/^```(?:mermaid[\w.-]*)?\s*\r?\n([\s\S]*?)\r?\n```$/i);
+        if (fencedMatch) return fencedMatch[1].trim();
+        const embeddedMatch = sourceText.match(/```(?:mermaid[\w.-]*)?\s*\r?\n([\s\S]*?)\r?\n```/i);
+        if (embeddedMatch) return embeddedMatch[1].trim();
+        return trimmed;
+      }
+
+      function setViewerTitle(displayName) {
+        sourcePath.textContent = displayName;
+        currentDiagramName = getFileName(displayName);
+        pageTitle.textContent = currentDiagramName;
+        document.title = `${currentDiagramName} - Mermaid Viewer`;
+      }
+
+      function applyZoom() {
+        const svg = diagramSource.querySelector('svg');
+        if (!svg || !baseWidth || !baseHeight) return;
+        svg.style.width = Math.round(baseWidth * currentZoom) + 'px';
+        svg.style.height = Math.round(baseHeight * currentZoom) + 'px';
+        zoomLabel.textContent = Math.round(currentZoom * 100) + '%';
+      }
+
+      async function renderMermaidSource(diagramText, displayName) {
+        const normalized = normalizeMermaidSource(diagramText);
+        if (!normalized) throw new Error('No content found.');
+        
+        currentDiagramText = normalized;
+        setViewerTitle(displayName);
+        
+        const { svg } = await mermaid.render('diagram-' + Date.now(), normalized);
+        diagramSource.innerHTML = svg;
+        
+        const svgEl = diagramSource.querySelector('svg');
+        const viewBox = svgEl.viewBox && svgEl.viewBox.baseVal;
+        baseWidth = (viewBox && viewBox.width) || svgEl.getBoundingClientRect().width;
+        baseHeight = (viewBox && viewBox.height) || svgEl.getBoundingClientRect().height;
+        
+        currentZoom = 1;
+        diagramWrap.scrollLeft = 0; diagramWrap.scrollTop = 0;
+        applyZoom();
+        statusText.textContent = 'Diagram loaded';
+      }
+
+      // Drag and Drop
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
+        window.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
+      });
+      window.addEventListener('dragenter', () => document.body.classList.add('drag-over'));
+      window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drag-over'); });
+      window.addEventListener('drop', async e => {
+        document.body.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          try {
+            statusText.textContent = 'Loading ' + file.name + '...';
+            await renderMermaidSource(await file.text(), file.name);
+          } catch (err) { statusText.textContent = err.message; }
+        }
+      });
+
+      // Theme
+      function updateThemeUI(theme) {
+        document.documentElement.classList.toggle('dark', theme === 'dark');
+        themeToggle.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      }
+      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      updateThemeUI(savedTheme);
+      themeToggle.addEventListener('click', () => {
+        const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+        localStorage.setItem('theme', next);
+        updateThemeUI(next);
+      });
+
+      // Events
+      zoomInButton.addEventListener('click', () => { currentZoom = Math.min(3, currentZoom + 0.1); applyZoom(); });
+      zoomOutButton.addEventListener('click', () => { currentZoom = Math.max(0.4, currentZoom - 0.1); applyZoom(); });
+      zoomResetButton.addEventListener('click', () => { currentZoom = 1; applyZoom(); });
+
+      filePicker.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (file) {
+          try {
+            await renderMermaidSource(await file.text(), file.name);
+          } catch (err) { statusText.textContent = err.message; }
+        }
+      });
+
+      // Panning
+      diagramWrap.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        isDragging = true;
+        dragStartX = e.clientX; dragStartY = e.clientY;
+        dragStartScrollLeft = diagramWrap.scrollLeft; dragStartScrollTop = diagramWrap.scrollTop;
+        diagramWrap.setPointerCapture(e.pointerId);
+      });
+      diagramWrap.addEventListener('pointermove', e => {
+        if (!isDragging) return;
+        diagramWrap.scrollLeft = dragStartScrollLeft - (e.clientX - dragStartX);
+        diagramWrap.scrollTop = dragStartScrollTop - (e.clientY - dragStartY);
+      });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => diagramWrap.addEventListener(ev, () => isDragging = false));
+
+      // Export
+      async function getExportSvg() {
+        mermaid.initialize(exportMermaidConfig);
+        try {
+          const { svg } = await mermaid.render('export-' + Date.now(), currentDiagramText.replace(/<br\s*\/?>/gi, '\n'));
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(svg, 'image/svg+xml');
+          const el = doc.documentElement;
+          el.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          const bg = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%'); bg.setAttribute('fill', '#ffffff');
+          el.insertBefore(bg, el.firstChild);
+          return new XMLSerializer().serializeToString(el);
+        } finally { mermaid.initialize(screenMermaidConfig); }
+      }
+
+      function download(blob, name) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      saveSvgButton.addEventListener('click', async () => {
+        try { download(new Blob([await getExportSvg()], { type: 'image/svg+xml' }), currentDiagramName + '.svg'); }
+        catch (err) { statusText.textContent = err.message; }
+      });
+
+      savePngButton.addEventListener('click', async () => {
+        try {
+          const svg = await getExportSvg();
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width; canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob(blob => download(blob, currentDiagramName + '.png'), 'image/png');
+          };
+          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        } catch (err) { statusText.textContent = err.message; }
+      });
+
+      // Init
+      async function start() {
+        try { await renderMermaidSource(await loadDiagramSource(mermaidSourcePath), mermaidSourcePath); }
+        catch (err) { statusText.textContent = err.message; }
+      }
+      start();
+    })();
+  </script>
 </body>
 </html>
