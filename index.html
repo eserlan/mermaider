@@ -59,23 +59,22 @@
 
   <div class="flex min-h-screen flex-col p-0 sm:p-5">
     <section class="panel-shell flex min-h-screen w-full flex-1 flex-col border-0 bg-[#fffaf0]/86 pb-24 pt-4 shadow-2xl shadow-stone-900/10 backdrop-blur-xl sm:mx-auto sm:min-h-0 sm:max-w-7xl sm:rounded-lg sm:border sm:border-white/70 sm:p-6 dark:border-stone-800 dark:bg-[#111615]/84 dark:shadow-black/30">
-      <header class="mb-4 sm:mb-6">
+      <header class="mb-3 sm:mb-4">
         <div class="px-4 sm:px-0">
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <div class="text-xs font-bold uppercase tracking-[0.22em] text-teal-700 dark:text-teal-300">Mermaider</div>
-              <h1 class="mt-1 text-2xl font-bold tracking-normal text-stone-950 dark:text-stone-50">Diagram Workbench</h1>
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex min-w-0 items-center gap-2">
+              <div class="source-code min-w-0 flex-1 truncate rounded-md border border-stone-200 bg-white/75 px-3 py-2 text-xs font-semibold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-950/50 dark:text-stone-300">Source: <span id="sourcePath">demo.mmd</span></div>
+              <button id="controlsToggle" class="tool-btn inline-flex h-9 shrink-0 items-center justify-center rounded-md border border-stone-200 bg-white px-3 text-[11px] font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" type="button" aria-controls="mainControls" aria-expanded="false">Tools</button>
             </div>
-            <div class="source-code rounded-md border border-stone-200 bg-white/75 px-3 py-2 text-xs font-semibold text-stone-600 shadow-sm dark:border-stone-700 dark:bg-stone-950/50 dark:text-stone-300">Source: <span id="sourcePath">demo.mmd</span></div>
-          </div>
-          <div class="mt-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-stretch sm:gap-3">
-            <label class="tool-btn inline-flex h-11 cursor-pointer items-center justify-center rounded-md border border-teal-700 bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-800 sm:h-10" for="filePicker" aria-label="Open Mermaid file">
-              Open
-              <input id="filePicker" type="file" class="file-input" accept=".mmd,.md,.mermaid,.txt" />
-            </label>
-            <button id="clearDiagram" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-amber-400 bg-amber-300 px-4 text-sm font-semibold text-stone-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-400 sm:h-10" aria-label="Clear diagram">Clear</button>
-            <button id="savePng" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" aria-label="Export PNG">PNG</button>
-            <button id="saveSvg" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" aria-label="Export SVG">SVG</button>
+            <div id="mainControls" class="hidden grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-stretch sm:gap-3">
+              <label class="tool-btn inline-flex h-11 cursor-pointer items-center justify-center rounded-md border border-teal-700 bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-800 sm:h-10" for="filePicker" aria-label="Open Mermaid file">
+                Open
+                <input id="filePicker" type="file" class="file-input" accept=".mmd,.md,.mermaid,.txt" />
+              </label>
+              <button id="clearDiagram" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-amber-400 bg-amber-300 px-4 text-sm font-semibold text-stone-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-400 sm:h-10" aria-label="Clear diagram">Clear</button>
+              <button id="savePng" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" aria-label="Export PNG">PNG</button>
+              <button id="saveSvg" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" aria-label="Export SVG">SVG</button>
+            </div>
           </div>
         </div>
       </header>
@@ -113,6 +112,8 @@
         path: document.getElementById('sourcePath'),
         status: document.getElementById('statusText'),
         picker: document.getElementById('filePicker'),
+        controlsPanel: document.getElementById('mainControls'),
+        controlsToggle: document.getElementById('controlsToggle'),
         inputPanel: document.getElementById('inputPanel'),
         input: document.getElementById('mermaidInput'),
         renderInput: document.getElementById('renderInput'),
@@ -136,6 +137,13 @@
       function setInputVisible(visible) {
         elements.inputPanel.classList.toggle('hidden', !visible);
         if (visible) elements.input.focus();
+      }
+
+      function setControlsVisible(visible) {
+        elements.controlsPanel.classList.toggle('hidden', !visible);
+        elements.controlsPanel.classList.toggle('grid', visible);
+        elements.controlsToggle.setAttribute('aria-expanded', String(visible));
+        elements.controlsToggle.textContent = visible ? 'Hide' : 'Tools';
       }
 
       function setDiagramControlsEnabled(enabled) {
@@ -263,6 +271,7 @@
       };
       elements.renderInput.onclick = () => render(elements.input.value, 'pasted.mmd');
       elements.clear.onclick = () => clearDiagram();
+      elements.controlsToggle.onclick = () => setControlsVisible(elements.controlsPanel.classList.contains('hidden'));
       elements.input.onkeydown = e => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
           render(elements.input.value, 'pasted.mmd');
