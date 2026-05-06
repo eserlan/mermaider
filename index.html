@@ -4,273 +4,359 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mermaid Viewer</title>
-  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-  <style type="text/css">
-    @custom-variant dark (&:where(.dark, .dark *));
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --btn-bg: #ffffff;
+      --btn-hover: #f1f5f9;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --diagram-bg: #ffffff;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
 
-    /* Smooth theme transitions */
-    body { transition: background-color 0.3s ease, color 0.3s ease; }
-    
-    /* Drag and drop feedback */
-    body.drag-over { background-color: rgba(59, 130, 246, 0.1); }
-    body.drag-over .main-panel { border: 2px dashed #94a3b8; }
+    :root.dark {
+      --bg: #020617;
+      --panel-bg: rgba(15, 23, 42, 0.9);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #1e293b;
+      --btn-bg: #1e293b;
+      --btn-hover: #334155;
+      --diagram-bg: #0f172a;
+      --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
 
-    /* Mermaid SVG scaling */
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      transition: background-color 0.3s ease, color 0.3s ease;
+      min-height: 100vh;
+    }
+
+    .page {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .panel {
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      background: var(--panel-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    header { margin-bottom: 24px; }
+
+    h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em; }
+    p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem; }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .source-tag {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: var(--btn-hover);
+      padding: 4px 8px;
+      border-radius: 4px;
+      color: var(--text-muted);
+      width: 100%;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid var(--border);
+      background: var(--btn-bg);
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .file-input { display: none; }
+
+    .diagram-wrap {
+      flex: 1;
+      background: var(--diagram-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: auto;
+      padding: 20px;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+    }
+    .diagram-wrap:active { cursor: grabbing; }
+
+    .status {
+      margin-top: 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--panel-bg);
+      backdrop-filter: blur(10px);
+      padding: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      z-index: 100;
+    }
+
+    .control-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+    }
+
+    .zoom-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 45px;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .page { padding: 0; }
+      .panel { border-radius: 0; border: none; height: 100vh; }
+      p { display: none; }
+      .header-actions .btn { flex: 1; }
+      .controls { scale: 0.9; bottom: 16px; right: 16px; }
+    }
+
+    /* Drag over effect */
+    body.drag-over { background-color: rgba(37, 99, 235, 0.1); }
+    body.drag-over .panel { border-style: dashed; border-color: var(--accent); }
+
     .mermaid svg { display: block; max-width: none; height: auto; }
   </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
-  <!-- Fixed Controls -->
-  <div class="controls fixed right-4 bottom-4 md:right-6 md:bottom-6 z-50 flex items-center gap-2 p-2 rounded-full bg-white/90 dark:bg-slate-800/90 backdrop-blur border border-slate-200 dark:border-slate-700 shadow-xl scale-90 md:scale-100 origin-right-bottom">
-    <button id="themeToggle" class="px-3 h-9 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 font-semibold text-sm transition-all cursor-pointer">🌙 Dark</button>
-    <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
-    <button id="zoomOut" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">−</button>
-    <span id="zoomLabel" class="text-xs font-medium text-slate-500 min-w-[40px] text-center">100%</span>
-    <button id="zoomIn" class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors cursor-pointer">+</button>
-    <button id="zoomReset" class="px-3 h-9 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold transition-colors cursor-pointer">Reset</button>
+<body>
+  <div class="controls">
+    <button id="themeToggle" class="btn control-btn" title="Toggle Theme">🌙</button>
+    <div style="width:1px; height:20px; background:var(--border)"></div>
+    <button id="zoomOut" class="btn control-btn">-</button>
+    <span id="zoomLabel" class="zoom-label">100%</span>
+    <button id="zoomIn" class="btn control-btn">+</button>
+    <button id="zoomReset" class="btn" style="padding:0 12px; height:32px; font-size:0.75rem">Reset</button>
   </div>
 
-  <div class="page p-0 sm:p-5 flex flex-col min-h-screen">
-    <section class="main-panel panel flex flex-col flex-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-800 sm:rounded-2xl shadow-2xl transition-all overflow-hidden h-[100vh] sm:h-auto">
-      <!-- Header -->
-      <div class="p-4 md:p-6 border-b border-slate-100 dark:border-slate-800">
-        <h1 id="pageTitle" class="text-xl md:text-2xl font-bold tracking-tight">Mermaid Viewer</h1>
-        <p class="hidden sm:block text-slate-500 dark:text-slate-400 text-sm mt-1">Drag & drop files or use the toolbar to explore diagrams.</p>
-        
-        <div class="header-actions flex flex-wrap items-center gap-2 mt-4">
-          <div class="w-full order-first sm:order-none sm:w-auto text-[10px] md:text-xs font-mono text-slate-400 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded">
-            Source: <span id="sourcePath">demo.mmd</span>
-          </div>
-          
-          <label class="inline-flex items-center px-4 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold cursor-pointer transition-all shadow-lg shadow-blue-500/20">
+  <div class="page">
+    <section class="panel">
+      <header>
+        <h1>Mermaid Viewer</h1>
+        <p>Explore diagrams with zoom and pan. Drag & drop files anywhere.</p>
+        <div class="header-actions">
+          <div class="source-tag">Source: <span id="sourcePath">demo.mmd</span></div>
+          <label class="btn btn-primary" for="filePicker">
             Open File
-            <input id="filePicker" type="file" class="hidden" accept=".mmd,.md,.mermaid,.txt" />
+            <input id="filePicker" type="file" class="file-input" accept=".mmd,.md,.mermaid,.txt" />
           </label>
-          
-          <button id="savePng" class="px-4 h-10 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold transition-all cursor-pointer">Save PNG</button>
-          <button id="saveSvg" class="px-4 h-10 rounded-full border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold transition-all cursor-pointer">Save SVG</button>
+          <button id="savePng" class="btn">PNG</button>
+          <button id="saveSvg" class="btn">SVG</button>
         </div>
+      </header>
+
+      <div class="diagram-wrap">
+        <pre class="mermaid" id="diagramSource"></pre>
       </div>
 
-      <!-- Diagram Area -->
-      <div class="diagram-wrap flex-1 overflow-auto bg-white dark:bg-slate-950 p-4 cursor-grab active:cursor-grabbing">
-        <pre class="mermaid mx-auto" id="diagramSource"></pre>
-      </div>
-
-      <!-- Status Bar -->
-      <div id="statusText" class="px-4 py-2 text-[10px] uppercase tracking-widest font-bold text-slate-400 dark:text-slate-500 border-t border-slate-50 dark:border-slate-800">
-        Ready
-      </div>
+      <div id="statusText" class="status">Ready</div>
     </section>
   </div>
 
-  <!-- Standard Mermaid UMD Script (Max compatibility) -->
   <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
   <script>
     (function() {
       const defaultSourcePath = 'demo.mmd';
       const sourceParams = new URLSearchParams(window.location.search);
       const mermaidSourcePath = sourceParams.get('src') || defaultSourcePath;
-      const diagramWrap = document.querySelector('.diagram-wrap');
-      const diagramSource = document.getElementById('diagramSource');
-      const pageTitle = document.getElementById('pageTitle');
-      const sourcePath = document.getElementById('sourcePath');
-      const statusText = document.getElementById('statusText');
-      const filePicker = document.getElementById('filePicker');
-      const savePngButton = document.getElementById('savePng');
-      const saveSvgButton = document.getElementById('saveSvg');
-      const zoomLabel = document.getElementById('zoomLabel');
-      const zoomInButton = document.getElementById('zoomIn');
-      const zoomOutButton = document.getElementById('zoomOut');
-      const zoomResetButton = document.getElementById('zoomReset');
-      const themeToggle = document.getElementById('themeToggle');
-
-      const screenMermaidConfig = {
-        startOnLoad: false,
-        securityLevel: 'loose',
-        flowchart: { useMaxWidth: false, htmlLabels: true }
-      };
-      const exportMermaidConfig = {
-        startOnLoad: false,
-        securityLevel: 'loose',
-        flowchart: { useMaxWidth: false, htmlLabels: false }
+      
+      const elements = {
+        wrap: document.querySelector('.diagram-wrap'),
+        source: document.getElementById('diagramSource'),
+        title: document.getElementById('pageTitle'),
+        path: document.getElementById('sourcePath'),
+        status: document.getElementById('statusText'),
+        picker: document.getElementById('filePicker'),
+        png: document.getElementById('savePng'),
+        svg: document.getElementById('saveSvg'),
+        zoomLabel: document.getElementById('zoomLabel'),
+        zoomIn: document.getElementById('zoomIn'),
+        zoomOut: document.getElementById('zoomOut'),
+        zoomReset: document.getElementById('zoomReset'),
+        theme: document.getElementById('themeToggle')
       };
 
-      let currentDiagramName = '';
-      let currentDiagramText = '';
-      let currentZoom = 1;
-      let baseWidth = 0, baseHeight = 0;
-      let isDragging = false;
-      let dragStartX = 0, dragStartY = 0;
-      let dragStartScrollLeft = 0, dragStartScrollTop = 0;
+      let currentData = { name: '', text: '', zoom: 1, baseW: 0, baseH: 0 };
+      let drag = { active: false, x: 0, y: 0, sL: 0, sT: 0 };
 
-      // Initialize Mermaid
-      mermaid.initialize(screenMermaidConfig);
+      mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
 
-      function getFileName(path) {
-        return path.split('/').pop().split('\\').pop() || path;
+      function updateZoom() {
+        const svg = elements.source.querySelector('svg');
+        if (!svg || !currentData.baseW) return;
+        svg.style.width = Math.round(currentData.baseW * currentData.zoom) + 'px';
+        svg.style.height = Math.round(currentData.baseH * currentData.zoom) + 'px';
+        elements.zoomLabel.textContent = Math.round(currentData.zoom * 100) + '%';
       }
 
-      async function loadDiagramSource(path) {
-        const response = await fetch(path);
-        if (!response.ok) throw new Error(`Could not load source: ${path}`);
-        return response.text();
-      }
+      async function render(text, name) {
+        try {
+          elements.status.textContent = 'Rendering...';
+          const cleanText = text.trim().replace(/^```mermaid\s*|\s*```$/gi, '');
+          currentData.text = cleanText;
+          currentData.name = name.split('/').pop();
+          elements.path.textContent = name;
+          document.title = currentData.name + ' - Mermaid Viewer';
 
-      function normalizeMermaidSource(sourceText) {
-        const trimmed = sourceText.trim();
-        const fencedMatch = trimmed.match(/^```(?:mermaid[\w.-]*)?\s*\r?\n([\s\S]*?)\r?\n```$/i);
-        if (fencedMatch) return fencedMatch[1].trim();
-        const embeddedMatch = sourceText.match(/```(?:mermaid[\w.-]*)?\s*\r?\n([\s\S]*?)\r?\n```/i);
-        if (embeddedMatch) return embeddedMatch[1].trim();
-        return trimmed;
-      }
-
-      function setViewerTitle(displayName) {
-        sourcePath.textContent = displayName;
-        currentDiagramName = getFileName(displayName);
-        pageTitle.textContent = currentDiagramName;
-        document.title = `${currentDiagramName} - Mermaid Viewer`;
-      }
-
-      function applyZoom() {
-        const svg = diagramSource.querySelector('svg');
-        if (!svg || !baseWidth || !baseHeight) return;
-        svg.style.width = Math.round(baseWidth * currentZoom) + 'px';
-        svg.style.height = Math.round(baseHeight * currentZoom) + 'px';
-        zoomLabel.textContent = Math.round(currentZoom * 100) + '%';
-      }
-
-      async function renderMermaidSource(diagramText, displayName) {
-        const normalized = normalizeMermaidSource(diagramText);
-        if (!normalized) throw new Error('No content found.');
-        
-        currentDiagramText = normalized;
-        setViewerTitle(displayName);
-        
-        const { svg } = await mermaid.render('diagram-' + Date.now(), normalized);
-        diagramSource.innerHTML = svg;
-        
-        const svgEl = diagramSource.querySelector('svg');
-        const viewBox = svgEl.viewBox && svgEl.viewBox.baseVal;
-        baseWidth = (viewBox && viewBox.width) || svgEl.getBoundingClientRect().width;
-        baseHeight = (viewBox && viewBox.height) || svgEl.getBoundingClientRect().height;
-        
-        currentZoom = 1;
-        diagramWrap.scrollLeft = 0; diagramWrap.scrollTop = 0;
-        applyZoom();
-        statusText.textContent = 'Diagram loaded';
-      }
-
-      // Drag and Drop
-      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => {
-        window.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); });
-      });
-      window.addEventListener('dragenter', () => document.body.classList.add('drag-over'));
-      window.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drag-over'); });
-      window.addEventListener('drop', async e => {
-        document.body.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
-        if (file) {
-          try {
-            statusText.textContent = 'Loading ' + file.name + '...';
-            await renderMermaidSource(await file.text(), file.name);
-          } catch (err) { statusText.textContent = err.message; }
+          const { svg } = await mermaid.render('d' + Date.now(), cleanText);
+          elements.source.innerHTML = svg;
+          
+          const svgEl = elements.source.querySelector('svg');
+          const vb = svgEl.viewBox.baseVal;
+          currentData.baseW = vb.width || svgEl.getBoundingClientRect().width;
+          currentData.baseH = vb.height || svgEl.getBoundingClientRect().height;
+          
+          currentData.zoom = 1;
+          elements.wrap.scrollLeft = 0; elements.wrap.scrollTop = 0;
+          updateZoom();
+          elements.status.textContent = 'Loaded: ' + currentData.name;
+        } catch (e) {
+          elements.status.textContent = 'Error: ' + e.message;
+          elements.source.innerHTML = `<pre style="color:#ef4444;padding:20px">${e.message}</pre>`;
         }
-      });
+      }
 
       // Theme
-      function updateThemeUI(theme) {
-        document.documentElement.classList.toggle('dark', theme === 'dark');
-        themeToggle.textContent = theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      function setTheme(isDark) {
+        document.documentElement.classList.toggle('dark', isDark);
+        elements.theme.textContent = isDark ? '☀️' : '🌙';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
       }
-      const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-      updateThemeUI(savedTheme);
-      themeToggle.addEventListener('click', () => {
-        const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-        localStorage.setItem('theme', next);
-        updateThemeUI(next);
-      });
+      const initialDark = localStorage.getItem('theme') === 'dark' || 
+                         (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      setTheme(initialDark);
+      elements.theme.onclick = () => setTheme(!document.documentElement.classList.contains('dark'));
 
-      // Events
-      zoomInButton.addEventListener('click', () => { currentZoom = Math.min(3, currentZoom + 0.1); applyZoom(); });
-      zoomOutButton.addEventListener('click', () => { currentZoom = Math.max(0.4, currentZoom - 0.1); applyZoom(); });
-      zoomResetButton.addEventListener('click', () => { currentZoom = 1; applyZoom(); });
+      // Zoom
+      elements.zoomIn.onclick = () => { currentData.zoom = Math.min(3, currentData.zoom + 0.1); updateZoom(); };
+      elements.zoomOut.onclick = () => { currentData.zoom = Math.max(0.2, currentData.zoom - 0.1); updateZoom(); };
+      elements.zoomReset.onclick = () => { currentData.zoom = 1; updateZoom(); };
 
-      filePicker.addEventListener('change', async e => {
+      // File loading
+      elements.picker.onchange = async e => {
         const file = e.target.files[0];
-        if (file) {
-          try {
-            await renderMermaidSource(await file.text(), file.name);
-          } catch (err) { statusText.textContent = err.message; }
-        }
-      });
+        if (file) render(await file.text(), file.name);
+      };
+
+      // Drag & Drop
+      window.ondragover = e => { e.preventDefault(); document.body.classList.add('drag-over'); };
+      window.ondragleave = e => { if (!e.relatedTarget) document.body.classList.remove('drag-over'); };
+      window.ondrop = async e => {
+        e.preventDefault(); document.body.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) render(await file.text(), file.name);
+      };
 
       // Panning
-      diagramWrap.addEventListener('pointerdown', e => {
+      elements.wrap.onpointerdown = e => {
         if (e.button !== 0) return;
-        isDragging = true;
-        dragStartX = e.clientX; dragStartY = e.clientY;
-        dragStartScrollLeft = diagramWrap.scrollLeft; dragStartScrollTop = diagramWrap.scrollTop;
-        diagramWrap.setPointerCapture(e.pointerId);
-      });
-      diagramWrap.addEventListener('pointermove', e => {
-        if (!isDragging) return;
-        diagramWrap.scrollLeft = dragStartScrollLeft - (e.clientX - dragStartX);
-        diagramWrap.scrollTop = dragStartScrollTop - (e.clientY - dragStartY);
-      });
-      ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => diagramWrap.addEventListener(ev, () => isDragging = false));
+        drag = { active: true, x: e.clientX, y: e.clientY, sL: elements.wrap.scrollLeft, sT: elements.wrap.scrollTop };
+        elements.wrap.setPointerCapture(e.pointerId);
+      };
+      elements.wrap.onpointermove = e => {
+        if (!drag.active) return;
+        elements.wrap.scrollLeft = drag.sL - (e.clientX - drag.x);
+        elements.wrap.scrollTop = drag.sT - (e.clientY - drag.y);
+      };
+      elements.wrap.onpointerup = () => drag.active = false;
 
-      // Export
+      // Exports
       async function getExportSvg() {
-        mermaid.initialize(exportMermaidConfig);
-        try {
-          const { svg } = await mermaid.render('export-' + Date.now(), currentDiagramText.replace(/<br\s*\/?>/gi, '\n'));
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(svg, 'image/svg+xml');
-          const el = doc.documentElement;
-          el.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          const bg = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%'); bg.setAttribute('fill', '#ffffff');
-          el.insertBefore(bg, el.firstChild);
-          return new XMLSerializer().serializeToString(el);
-        } finally { mermaid.initialize(screenMermaidConfig); }
+        const { svg } = await mermaid.render('exp', currentData.text.replace(/<br\s*\/?>/gi, '\n'));
+        const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+        const el = doc.documentElement;
+        el.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        const bg = doc.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%'); bg.setAttribute('fill', 'white');
+        el.insertBefore(bg, el.firstChild);
+        return new XMLSerializer().serializeToString(el);
       }
 
       function download(blob, name) {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url; a.download = name;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      saveSvgButton.addEventListener('click', async () => {
-        try { download(new Blob([await getExportSvg()], { type: 'image/svg+xml' }), currentDiagramName + '.svg'); }
-        catch (err) { statusText.textContent = err.message; }
-      });
+      elements.svg.onclick = async () => {
+        const svg = await getExportSvg();
+        download(new Blob([svg], {type:'image/svg+xml'}), currentData.name + '.svg');
+      };
 
-      savePngButton.addEventListener('click', async () => {
-        try {
-          const svg = await getExportSvg();
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width; canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0);
-            canvas.toBlob(blob => download(blob, currentDiagramName + '.png'), 'image/png');
-          };
-          img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-        } catch (err) { statusText.textContent = err.message; }
-      });
+      elements.png.onclick = async () => {
+        const svg = await getExportSvg();
+        const img = new Image();
+        img.onload = () => {
+          const cvs = document.createElement('canvas');
+          cvs.width = img.width; cvs.height = img.height;
+          const ctx = cvs.getContext('2d');
+          ctx.fillStyle = 'white'; ctx.fillRect(0, 0, cvs.width, cvs.height);
+          ctx.drawImage(img, 0, 0);
+          cvs.toBlob(b => download(b, currentData.name + '.png'), 'image/png');
+        };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+      };
 
-      // Init
-      async function start() {
-        try { await renderMermaidSource(await loadDiagramSource(mermaidSourcePath), mermaidSourcePath); }
-        catch (err) { statusText.textContent = err.message; }
-      }
-      start();
+      // Start
+      fetch(mermaidSourcePath).then(r => r.text()).then(t => render(t, mermaidSourcePath));
     })();
   </script>
 </body>
