@@ -4,210 +4,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mermaid Viewer</title>
+  <script>
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    :root {
-      --bg: #f8fafc;
-      --panel-bg: rgba(255, 255, 255, 0.9);
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --btn-bg: #ffffff;
-      --btn-hover: #f1f5f9;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --diagram-bg: #ffffff;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    }
-
-    :root.dark {
-      --bg: #020617;
-      --panel-bg: rgba(15, 23, 42, 0.9);
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --border: #1e293b;
-      --btn-bg: #1e293b;
-      --btn-hover: #334155;
-      --diagram-bg: #0f172a;
-      --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
-    }
-
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: 'Inter', -apple-system, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-      transition: background-color 0.3s ease, color 0.3s ease;
-      min-height: 100vh;
-    }
-
-    .page {
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    .panel {
-      max-width: 1200px;
-      margin: 0 auto;
-      width: 100%;
-      background: var(--panel-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-      flex: 1;
-    }
-
-    header { margin-bottom: 24px; }
-
-    h1 { margin: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.025em; }
-    p { margin: 4px 0 0; color: var(--text-muted); font-size: 0.875rem; }
-
-    .header-actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .source-tag {
-      font-family: monospace;
-      font-size: 0.75rem;
-      background: var(--btn-hover);
-      padding: 4px 8px;
-      border-radius: 4px;
-      color: var(--text-muted);
-      width: 100%;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: 40px;
-      padding: 0 16px;
-      border-radius: 999px;
-      font-size: 0.875rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid var(--border);
-      background: var(--btn-bg);
-      color: var(--text);
-      text-decoration: none;
-    }
-
-    .btn:hover { background: var(--btn-hover); transform: translateY(-1px); }
-    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-    .btn-primary:hover { background: var(--accent-hover); }
 
     .file-input { display: none; }
 
-    .diagram-wrap {
-      flex: 1;
-      background: var(--diagram-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: auto;
-      padding: 20px;
-      cursor: grab;
-      display: flex;
-      justify-content: center;
-    }
-    .diagram-wrap:active { cursor: grabbing; }
-
-    .status {
-      margin-top: 16px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
-    }
-
-    .controls {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--panel-bg);
-      backdrop-filter: blur(10px);
-      padding: 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      z-index: 100;
-    }
-
-    .control-btn {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      border-radius: 50%;
-    }
-
-    .zoom-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      min-width: 45px;
-      text-align: center;
-    }
-
-    @media (max-width: 640px) {
-      .page { padding: 0; }
-      .panel { border-radius: 0; border: none; height: 100vh; }
-      p { display: none; }
-      .header-actions .btn { flex: 1; }
-      .controls { scale: 0.9; bottom: 16px; right: 16px; }
-    }
-
     /* Drag over effect */
-    body.drag-over { background-color: rgba(37, 99, 235, 0.1); }
-    body.drag-over .panel { border-style: dashed; border-color: var(--accent); }
+    body.drag-over { background-color: rgba(37, 99, 235, 0.08); }
+    body.drag-over .panel-shell { border-style: dashed; border-color: rgb(37 99 235); }
 
+    .diagram-wrap { cursor: grab; }
+    .diagram-wrap:active { cursor: grabbing; }
     .mermaid svg { display: block; max-width: none; height: auto; }
   </style>
 </head>
-<body>
-  <div class="controls">
-    <button id="themeToggle" class="btn control-btn" title="Toggle Theme">🌙</button>
-    <div style="width:1px; height:20px; background:var(--border)"></div>
-    <button id="zoomOut" class="btn control-btn">-</button>
-    <span id="zoomLabel" class="zoom-label">100%</span>
-    <button id="zoomIn" class="btn control-btn">+</button>
-    <button id="zoomReset" class="btn" style="padding:0 12px; height:32px; font-size:0.75rem">Reset</button>
+<body class="min-h-screen bg-slate-100 bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.15),_transparent_38%),linear-gradient(180deg,_#f8fafc_0%,_#e2e8f0_100%)] text-slate-950 transition-colors duration-300 dark:bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.18),_transparent_34%),linear-gradient(180deg,_#020617_0%,_#0f172a_100%)] dark:text-slate-50">
+  <div class="fixed bottom-4 right-4 z-50 flex scale-90 items-center gap-2 rounded-full border border-slate-200/80 bg-white/85 p-2 shadow-xl shadow-slate-900/10 backdrop-blur md:bottom-6 md:right-6 md:scale-100 dark:border-slate-700/80 dark:bg-slate-900/85 dark:shadow-black/30">
+    <button id="themeToggle" class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700" title="Toggle Theme">🌙</button>
+    <div class="h-5 w-px bg-slate-200 dark:bg-slate-700"></div>
+    <button id="zoomOut" class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">-</button>
+    <span id="zoomLabel" class="min-w-12 text-center text-xs font-semibold text-slate-500 dark:text-slate-300">100%</span>
+    <button id="zoomIn" class="inline-flex size-9 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">+</button>
+    <button id="zoomReset" class="inline-flex h-8 items-center justify-center rounded-full border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">Reset</button>
   </div>
 
-  <div class="page">
-    <section class="panel">
-      <header>
-        <h1>Mermaid Viewer</h1>
-        <p>Explore diagrams with zoom and pan. Drag & drop files anywhere.</p>
-        <div class="header-actions">
-          <div class="source-tag">Source: <span id="sourcePath">demo.mmd</span></div>
-          <label class="btn btn-primary" for="filePicker">
+  <div class="flex min-h-screen flex-col p-0 sm:p-5">
+    <section class="panel-shell flex min-h-screen w-full flex-1 flex-col border-0 bg-white/80 p-5 shadow-2xl shadow-slate-900/10 backdrop-blur-xl sm:mx-auto sm:min-h-0 sm:max-w-6xl sm:rounded-3xl sm:border sm:border-white/70 sm:p-6 dark:border-slate-800 dark:bg-slate-950/70 dark:shadow-black/30">
+      <header class="mb-6">
+        <h1 class="text-2xl font-black tracking-tight text-slate-950 dark:text-slate-50">Mermaid Viewer</h1>
+        <p class="mt-1 hidden text-sm text-slate-500 sm:block dark:text-slate-400">Explore diagrams with zoom and pan. Drag and drop files anywhere.</p>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <div class="w-full rounded-lg bg-slate-100 px-3 py-2 font-mono text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-300">Source: <span id="sourcePath">demo.mmd</span></div>
+          <label class="inline-flex h-10 cursor-pointer items-center justify-center rounded-full border border-blue-600 bg-blue-600 px-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-blue-700" for="filePicker">
             Open File
             <input id="filePicker" type="file" class="file-input" accept=".mmd,.md,.mermaid,.txt" />
           </label>
-          <button id="savePng" class="btn">PNG</button>
-          <button id="saveSvg" class="btn">SVG</button>
+          <button id="savePng" class="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">PNG</button>
+          <button id="saveSvg" class="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">SVG</button>
         </div>
       </header>
 
-      <div class="diagram-wrap">
+      <div class="diagram-wrap flex flex-1 justify-center overflow-auto rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
         <pre class="mermaid" id="diagramSource"></pre>
       </div>
 
-      <div id="statusText" class="status">Ready</div>
+      <div id="statusText" class="mt-4 text-xs font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">Ready</div>
     </section>
   </div>
 
