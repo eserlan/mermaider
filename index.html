@@ -149,9 +149,6 @@
       function setDiagramControlsEnabled(enabled) {
         elements.png.disabled = !enabled;
         elements.svg.disabled = !enabled;
-        elements.zoomIn.disabled = !enabled;
-        elements.zoomOut.disabled = !enabled;
-        elements.zoomReset.disabled = !enabled;
         elements.wrap.classList.toggle('has-diagram', enabled);
         elements.empty.classList.toggle('hidden', enabled);
       }
@@ -179,6 +176,29 @@
         svg.style.width = Math.round(currentData.baseW * currentData.zoom) + 'px';
         svg.style.height = Math.round(currentData.baseH * currentData.zoom) + 'px';
         elements.zoomLabel.textContent = Math.round(currentData.zoom * 100) + '%';
+      }
+
+      function getRenderedSvgSize(svg) {
+        const viewBox = svg.viewBox && svg.viewBox.baseVal;
+        const rect = svg.getBoundingClientRect();
+        const attrWidth = parseFloat(svg.getAttribute('width'));
+        const attrHeight = parseFloat(svg.getAttribute('height'));
+        return {
+          width: viewBox && viewBox.width ? viewBox.width : rect.width || attrWidth || 0,
+          height: viewBox && viewBox.height ? viewBox.height : rect.height || attrHeight || 0
+        };
+      }
+
+      function zoomBy(delta) {
+        if (!currentData.text) return;
+        currentData.zoom = Math.min(3, Math.max(0.2, currentData.zoom + delta));
+        updateZoom();
+      }
+
+      function resetZoom() {
+        if (!currentData.text) return;
+        currentData.zoom = 1;
+        updateZoom();
       }
 
       function clearDiagram() {
@@ -216,12 +236,12 @@
           elements.source.innerHTML = svg;
           
           const svgEl = elements.source.querySelector('svg');
-          const vb = svgEl.viewBox.baseVal;
+          const size = getRenderedSvgSize(svgEl);
           setCurrentDiagram(
             displayName,
             cleanText,
-            vb.width || svgEl.getBoundingClientRect().width,
-            vb.height || svgEl.getBoundingClientRect().height
+            size.width,
+            size.height
           );
           elements.wrap.scrollLeft = 0; elements.wrap.scrollTop = 0;
           updateZoom();
@@ -253,9 +273,9 @@
       elements.theme.onclick = () => setTheme(!document.documentElement.classList.contains('dark'));
 
       // Zoom
-      elements.zoomIn.onclick = () => { currentData.zoom = Math.min(3, currentData.zoom + 0.1); updateZoom(); };
-      elements.zoomOut.onclick = () => { currentData.zoom = Math.max(0.2, currentData.zoom - 0.1); updateZoom(); };
-      elements.zoomReset.onclick = () => { currentData.zoom = 1; updateZoom(); };
+      elements.zoomIn.onclick = () => zoomBy(0.1);
+      elements.zoomOut.onclick = () => zoomBy(-0.1);
+      elements.zoomReset.onclick = () => resetZoom();
 
       // File loading
       elements.picker.onchange = async e => {
