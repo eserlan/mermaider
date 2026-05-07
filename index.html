@@ -38,6 +38,7 @@
 
     .diagram-wrap.has-diagram { cursor: grab; }
     .diagram-wrap:active { cursor: grabbing; }
+    .mermaid { margin: 0 auto; }
     .mermaid svg { display: block; max-width: none; height: auto; }
 
     .tool-btn:disabled {
@@ -89,7 +90,7 @@
         </div>
       </div>
 
-      <div class="diagram-wrap relative mx-0 flex min-h-[56vh] flex-1 justify-center overflow-auto border-y border-stone-200 bg-[#fffdf8] p-2 shadow-inner sm:rounded-lg sm:border sm:p-5 dark:border-stone-800 dark:bg-[#0d1110]">
+      <div class="diagram-wrap relative mx-0 flex min-h-[56vh] flex-1 justify-start overflow-auto border-y border-stone-200 bg-[#fffdf8] p-2 shadow-inner sm:rounded-lg sm:border sm:p-5 dark:border-stone-800 dark:bg-[#0d1110]">
         <div id="emptyState" class="pointer-events-none absolute inset-0 flex items-center justify-center px-8 text-center text-sm font-semibold text-stone-400 dark:text-stone-600">No diagram loaded</div>
         <pre class="mermaid" id="diagramSource"></pre>
       </div>
