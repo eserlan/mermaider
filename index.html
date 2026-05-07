@@ -38,7 +38,12 @@
 
     .diagram-wrap.has-diagram { cursor: grab; }
     .diagram-wrap:active { cursor: grabbing; }
-    .mermaid { margin: 0 auto; }
+    .mermaid {
+      display: block;
+      width: max-content;
+      min-width: 100%;
+      margin: 0;
+    }
     .mermaid svg { display: block; max-width: none; height: auto; }
 
     .tool-btn:disabled {
@@ -90,7 +95,7 @@
         </div>
       </div>
 
-      <div class="diagram-wrap relative mx-0 flex min-h-[56vh] flex-1 justify-start overflow-auto border-y border-stone-200 bg-[#fffdf8] p-2 shadow-inner sm:rounded-lg sm:border sm:p-5 dark:border-stone-800 dark:bg-[#0d1110]">
+      <div class="diagram-wrap relative mx-0 min-h-[56vh] flex-1 overflow-auto border-y border-stone-200 bg-[#fffdf8] p-2 shadow-inner sm:rounded-lg sm:border sm:p-5 dark:border-stone-800 dark:bg-[#0d1110]">
         <div id="emptyState" class="pointer-events-none absolute inset-0 flex items-center justify-center px-8 text-center text-sm font-semibold text-stone-400 dark:text-stone-600">No diagram loaded</div>
         <pre class="mermaid" id="diagramSource"></pre>
       </div>
@@ -174,8 +179,12 @@
           elements.zoomLabel.textContent = Math.round(currentData.zoom * 100) + '%';
           return;
         }
-        svg.style.width = Math.round(currentData.baseW * currentData.zoom) + 'px';
-        svg.style.height = Math.round(currentData.baseH * currentData.zoom) + 'px';
+        const width = Math.round(currentData.baseW * currentData.zoom);
+        const height = Math.round(currentData.baseH * currentData.zoom);
+        elements.source.style.width = width + 'px';
+        elements.source.style.height = height + 'px';
+        svg.style.width = width + 'px';
+        svg.style.height = height + 'px';
         elements.zoomLabel.textContent = Math.round(currentData.zoom * 100) + '%';
       }
 
@@ -229,6 +238,8 @@
         elements.source.innerHTML = '';
         elements.source.style.color = '';
         elements.source.style.padding = '';
+        elements.source.style.width = '';
+        elements.source.style.height = '';
         elements.input.value = '';
         elements.path.textContent = 'Pasted or cleared';
         document.title = 'Mermaid Viewer';
@@ -256,6 +267,8 @@
           const { svg } = await mermaid.render('d' + (++renderCount), cleanText);
           elements.source.style.color = '';
           elements.source.style.padding = '';
+          elements.source.style.width = '';
+          elements.source.style.height = '';
           elements.source.innerHTML = svg;
           
           const svgEl = elements.source.querySelector('svg');
@@ -276,6 +289,8 @@
           setCurrentDiagram('', '');
           elements.source.style.color = '#dc2626';
           elements.source.style.padding = '20px';
+          elements.source.style.width = '';
+          elements.source.style.height = '';
           elements.source.textContent = e.message;
           if (name === 'pasted.mmd') setInputVisible(true);
           updateZoom();
