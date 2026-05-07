@@ -201,6 +201,28 @@
         updateZoom();
       }
 
+      function isTypingTarget(target) {
+        return target && (
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'INPUT' ||
+          target.isContentEditable
+        );
+      }
+
+      function handleZoomKeys(e) {
+        if (isTypingTarget(e.target)) return;
+        if (e.key === '+' || e.key === '=') {
+          e.preventDefault();
+          zoomBy(0.1);
+        } else if (e.key === '-' || e.key === '_') {
+          e.preventDefault();
+          zoomBy(-0.1);
+        } else if (e.key === '0') {
+          e.preventDefault();
+          resetZoom();
+        }
+      }
+
       function clearDiagram() {
         setCurrentDiagram('', '');
         elements.source.innerHTML = '';
@@ -276,6 +298,7 @@
       elements.zoomIn.onclick = () => zoomBy(0.1);
       elements.zoomOut.onclick = () => zoomBy(-0.1);
       elements.zoomReset.onclick = () => resetZoom();
+      document.addEventListener('keydown', handleZoomKeys);
 
       // File loading
       elements.picker.onchange = async e => {
