@@ -78,8 +78,8 @@
                 <input id="filePicker" type="file" class="file-input" accept=".mmd,.md,.mermaid,.txt" />
               </label>
               <button id="clearDiagram" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-amber-400 bg-amber-300 px-4 text-sm font-semibold text-stone-950 shadow-sm transition hover:-translate-y-0.5 hover:bg-amber-400 sm:h-10" aria-label="Clear diagram">Clear</button>
-              <button id="savePng" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" aria-label="Export PNG">PNG</button>
-              <button id="saveSvg" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" aria-label="Export SVG">SVG</button>
+              <button id="savePng" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" title="Download PNG (Shift-click to copy)" aria-label="Export PNG. Shift-click to copy to clipboard">PNG</button>
+              <button id="saveSvg" class="tool-btn inline-flex h-11 items-center justify-center rounded-md border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-stone-100 sm:h-10 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" title="Download SVG (Shift-click to copy)" aria-label="Export SVG. Shift-click to copy to clipboard">SVG</button>
             </div>
           </div>
         </div>
@@ -398,18 +398,8 @@
         a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
 
-      elements.svg.onclick = async () => {
-        try {
-          const svg = await getExportSvg();
-          download(new Blob([svg], {type:'image/svg+xml'}), currentData.name + '.svg');
-        } catch (e) {
-          setStatus('Error: ' + e.message);
-        }
-      };
-
-      elements.png.onclick = async () => {
-        try {
-          const svg = await getExportSvg();
+      function getPngBlob(svg) {
+        return new Promise((resolve, reject) => {
           const img = new Image();
           img.onload = () => {
             const cvs = document.createElement('canvas');
@@ -417,9 +407,52 @@
             const ctx = cvs.getContext('2d');
             ctx.fillStyle = 'white'; ctx.fillRect(0, 0, cvs.width, cvs.height);
             ctx.drawImage(img, 0, 0);
-            cvs.toBlob(b => download(b, currentData.name + '.png'), 'image/png');
+            cvs.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not create PNG')), 'image/png');
           };
+          img.onerror = () => reject(new Error('Could not create PNG'));
           img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        });
+      }
+
+      async function copyToClipboard(blob, fallbackText) {
+        if (!navigator.clipboard || !window.ClipboardItem) {
+          throw new Error('Clipboard image copying is not supported in this browser');
+        }
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+        } catch (error) {
+          if (!fallbackText || !navigator.clipboard.writeText) throw error;
+          await navigator.clipboard.writeText(fallbackText);
+          return 'SVG markup';
+        }
+        return blob.type === 'image/png' ? 'PNG image' : 'SVG image';
+      }
+
+      elements.svg.onclick = async e => {
+        try {
+          const svg = await getExportSvg();
+          const blob = new Blob([svg], {type:'image/svg+xml'});
+          if (e.shiftKey) {
+            setStatus('Copying SVG...');
+            setStatus('Copied ' + await copyToClipboard(blob, svg) + ' to clipboard');
+          } else {
+            download(blob, currentData.name + '.svg');
+          }
+        } catch (e) {
+          setStatus('Error: ' + e.message);
+        }
+      };
+
+      elements.png.onclick = async e => {
+        try {
+          const svg = await getExportSvg();
+          const blob = await getPngBlob(svg);
+          if (e.shiftKey) {
+            setStatus('Copying PNG...');
+            setStatus('Copied ' + await copyToClipboard(blob) + ' to clipboard');
+          } else {
+            download(blob, currentData.name + '.png');
+          }
         } catch (e) {
           setStatus('Error: ' + e.message);
         }
