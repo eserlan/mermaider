@@ -344,7 +344,8 @@
       elements.controlsToggle.onclick = () => setControlsVisible(elements.controlsPanel.classList.contains('hidden'));
       elements.input.onkeydown = e => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-          render(elements.input.value, 'pasted.mmd');
+          e.preventDefault();
+          render(elements.input.value, currentData.name || 'pasted.mmd');
         }
       };
 
