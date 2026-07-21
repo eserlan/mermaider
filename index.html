@@ -54,6 +54,10 @@
   </style>
 </head>
 <body class="min-h-screen bg-[#f6f0e4] bg-[linear-gradient(rgba(15,23,42,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.045)_1px,transparent_1px),linear-gradient(135deg,#f6f0e4_0%,#eef7f4_48%,#f8f4ec_100%)] bg-[size:28px_28px,28px_28px,100%_100%] text-stone-950 transition-colors duration-300 dark:bg-[#11100e] dark:bg-[linear-gradient(rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.055)_1px,transparent_1px),linear-gradient(135deg,#11100e_0%,#12201d_52%,#171412_100%)] dark:text-stone-50">
+  <div id="copyToast" popover="manual" role="status" aria-live="polite" class="inset-auto top-4 right-4 m-0 hidden items-center gap-3 rounded-lg border border-teal-200 bg-[#fffaf0] px-4 py-3 text-sm font-semibold text-teal-900 shadow-xl shadow-stone-900/15 dark:border-teal-800 dark:bg-stone-900 dark:text-teal-200">
+    <span id="copyToastMessage">Copied to clipboard</span>
+    <button id="copyToastClose" class="tool-btn inline-flex size-7 items-center justify-center rounded-md text-teal-800 transition hover:bg-teal-100 dark:text-teal-200 dark:hover:bg-teal-950" type="button" popovertarget="copyToast" popovertargetaction="hide" aria-label="Dismiss notification">×</button>
+  </div>
   <div class="fixed inset-x-3 bottom-3 z-50 flex items-center justify-center gap-1.5 rounded-lg border border-stone-200/80 bg-[#fffaf0]/90 p-2 shadow-xl shadow-stone-900/10 backdrop-blur md:inset-x-auto md:bottom-6 md:right-6 md:justify-start md:gap-2 dark:border-stone-700/80 dark:bg-[#151a18]/90 dark:shadow-black/30">
     <button id="themeToggle" class="tool-btn inline-flex h-9 min-w-14 items-center justify-center rounded-md border border-stone-200 bg-white px-3 text-[11px] font-semibold text-stone-700 transition hover:-translate-y-0.5 hover:bg-stone-100 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:bg-stone-800" title="Toggle Theme" aria-label="Toggle theme">Moon</button>
     <div class="h-5 w-px shrink-0 bg-stone-200 dark:bg-stone-700"></div>
@@ -118,6 +122,9 @@
         empty: document.getElementById('emptyState'),
         path: document.getElementById('sourcePath'),
         status: document.getElementById('statusText'),
+        toast: document.getElementById('copyToast'),
+        toastMessage: document.getElementById('copyToastMessage'),
+        toastClose: document.getElementById('copyToastClose'),
         picker: document.getElementById('filePicker'),
         controlsPanel: document.getElementById('mainControls'),
         controlsToggle: document.getElementById('controlsToggle'),
@@ -139,6 +146,7 @@
       let drag = { active: false, x: 0, y: 0, sL: 0, sT: 0 };
       let dragDepth = 0;
       let renderCount = 0;
+      let toastTimer;
 
       mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
 
@@ -164,6 +172,24 @@
 
       function setStatus(message) {
         elements.status.textContent = message;
+      }
+
+      function hideCopyToast() {
+        clearTimeout(toastTimer);
+        if (typeof elements.toast.hidePopover === 'function' && elements.toast.matches(':popover-open')) {
+          elements.toast.hidePopover();
+        }
+        elements.toast.classList.add('hidden');
+      }
+
+      function showCopyToast(message) {
+        clearTimeout(toastTimer);
+        elements.toastMessage.textContent = message;
+        elements.toast.classList.remove('hidden');
+        if (typeof elements.toast.showPopover === 'function') {
+          elements.toast.showPopover();
+        }
+        toastTimer = setTimeout(hideCopyToast, 3000);
       }
 
       function setCurrentDiagram(name, text, baseW = 0, baseH = 0) {
@@ -341,6 +367,7 @@
       elements.renderInput.onclick = () => render(elements.input.value, currentData.name || 'pasted.mmd');
       elements.clear.onclick = () => clearDiagram();
       elements.edit.onclick = () => editDiagram();
+      elements.toastClose.onclick = () => hideCopyToast();
       elements.controlsToggle.onclick = () => setControlsVisible(elements.controlsPanel.classList.contains('hidden'));
       elements.input.onkeydown = e => {
         if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
@@ -462,7 +489,9 @@
           const blob = new Blob([svg], {type:'image/svg+xml'});
           if (e.shiftKey) {
             setStatus('Copying SVG...');
-            setStatus('Copied ' + await copyToClipboard(blob, svg) + ' to clipboard');
+            const message = 'Copied ' + await copyToClipboard(blob, svg) + ' to clipboard';
+            setStatus(message);
+            showCopyToast(message);
           } else {
             download(blob, currentData.name + '.svg');
           }
@@ -477,7 +506,9 @@
           const blob = await getPngBlob(svg);
           if (e.shiftKey) {
             setStatus('Copying PNG...');
-            setStatus('Copied ' + await copyToClipboard(blob) + ' to clipboard');
+            const message = 'Copied ' + await copyToClipboard(blob) + ' to clipboard';
+            setStatus(message);
+            showCopyToast(message);
           } else {
             download(blob, currentData.name + '.png');
           }
