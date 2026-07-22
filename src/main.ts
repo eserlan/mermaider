@@ -1,3 +1,5 @@
+import mermaid from 'mermaid';
+import elkLayouts from '@mermaid-js/layout-elk';
 import type { DOMElements, DiagramData, DragState } from './types';
 import { initTheme } from './theme';
 import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
@@ -39,9 +41,9 @@ import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
   let renderCount = 0;
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-  if (window.mermaid) {
-    window.mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
-  }
+  // Register ELK layout loaders and initialize mermaid
+  mermaid.registerLayoutLoaders(elkLayouts);
+  mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', layout: 'elk' });
 
   // Initialize theme controls
   if (elements.theme) {
@@ -198,7 +200,7 @@ import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
       elements.path.textContent = name;
       document.title = displayName + ' - Mermaid Viewer';
 
-      const { svg } = await window.mermaid.render('d' + (++renderCount), cleanText);
+      const { svg } = await mermaid.render('d' + (++renderCount), cleanText);
       elements.source.style.color = '';
       elements.source.style.padding = '';
       elements.source.style.width = '';

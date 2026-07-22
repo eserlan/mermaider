@@ -1,3 +1,4 @@
+import mermaid from 'mermaid';
 import type { DiagramData } from './types';
 
 export async function getExportSvg(
@@ -6,7 +7,7 @@ export async function getExportSvg(
 ): Promise<string> {
   if (!currentData.text) throw new Error('No diagram to export');
 
-  const { svg } = await window.mermaid.render(
+  const { svg } = await mermaid.render(
     'exp' + renderCount,
     currentData.text.replace(/<br\s*\/?>/gi, '\n')
   );
