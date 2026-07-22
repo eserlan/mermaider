@@ -1,15 +1,13 @@
-graph TD
-    Start((Start)) --> Process1[User enters Mermaid Syntax]
-    Process1 --> Decision{Valid Syntax?}
-    Decision -- Yes --> Render[Render Diagram]
-    Decision -- No --> Error[Show Error Message]
-    Render --> End((Success))
-    
-    subgraph Legend
-        Start
-        Process1
-        Decision
-        Render
-        Error
-        End
+flowchart LR
+    subgraph Input [User Input]
+        direction TB
+        Syntax[Enter Mermaid Syntax] --> Validation{Valid?}
     end
+
+    subgraph Output [Rendering Pipeline]
+        direction TB
+        Engine[ELK Layout Engine] --> SVG[Rendered SVG]
+    end
+
+    Validation -- Yes --> Engine
+    Validation -- No --> Error[Show Error Toast]
