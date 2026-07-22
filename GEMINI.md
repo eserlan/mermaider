@@ -6,6 +6,7 @@
 - Mermaid.js (via CDN)
 
 ## Conventions
+- **Branching:** Work directly on `main` for fast & agile development.
 - **Surgical Updates:** When modifying `index.html`, use `replace` for targeted edits.
 - **Styling:** Keep styles in `style.css` using Vanilla CSS. Avoid utility-first frameworks unless requested.
 - **Directives:** Only implement features or fixes when explicitly directed.
