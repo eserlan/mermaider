@@ -41,9 +41,14 @@ import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
   let renderCount = 0;
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-  // Register ELK layout loaders and initialize mermaid
+  // Register ELK layout loaders and initialize mermaid as global default
   mermaid.registerLayoutLoaders(elkLayouts);
-  mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', layout: 'elk' });
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    layout: 'elk',
+    flowchart: { defaultRenderer: 'elk' }
+  });
 
   // Initialize theme controls
   if (elements.theme) {
