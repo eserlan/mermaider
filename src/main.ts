@@ -1,5 +1,4 @@
 import mermaid from 'mermaid';
-import elkLayouts from '@mermaid-js/layout-elk';
 import type { DOMElements, DiagramData, DragState } from './types';
 import { initTheme } from './theme';
 import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
@@ -41,9 +40,8 @@ import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
   let renderCount = 0;
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-  // Register ELK layout loaders and initialize mermaid with dagre-wrapper default
+  // Initialize mermaid with dagre-wrapper default
   (window as unknown as { mermaid: typeof mermaid }).mermaid = mermaid;
-  mermaid.registerLayoutLoaders(elkLayouts);
   mermaid.initialize({
     startOnLoad: false,
     securityLevel: 'loose',
