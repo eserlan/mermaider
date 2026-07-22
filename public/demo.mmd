@@ -1,32 +1,21 @@
 flowchart LR
-  ADVISOR(["👤 Mortgage Advisor"])
+    subgraph Client [Web Application]
+        direction TB
+        UI[User Interface]
+        State[State Management]
+        UI ~~~ State
+    end
 
-  subgraph MANUAL_WORK["Current manual advisory work"]
-    direction TB
-    INCOME(["Analyse income<br/>discrepancies"])
-    AFFORDABILITY(["Analyse savings and<br/>customer affordability"])
-    MEETINGS(["Prepare and follow up<br/>on meetings"])
-    POLICY(["Navigate policies<br/>and processes"])
-    KNOWLEDGE(["Retrieve relevant<br/>knowledge"])
+    subgraph Server [Backend System]
+        direction TB
+        API[REST API Service]
+        Auth[Authentication Engine]
+        API ~~~ Auth
+    end
 
-    INCOME ~~~ AFFORDABILITY ~~~ MEETINGS ~~~ POLICY ~~~ KNOWLEDGE
-  end
+    Database[(Database Cluster)]
 
-  PLATFORMS["Existing mortgage platforms<br/><i>Processing, credit assessment,<br/>workflow management</i>"]
-  CASE_DATA["Customer and case information<br/><i>Scattered across systems</i>"]
-  DOCUMENTS["Policies, processes and<br/>knowledge documentation<br/><i>Large and unstructured</i>"]
-
-  ADVISOR --> INCOME
-  ADVISOR --> AFFORDABILITY
-  ADVISOR --> MEETINGS
-  ADVISOR --> POLICY
-  ADVISOR --> KNOWLEDGE
-
-  INCOME -. "manually consults" .-> PLATFORMS
-  INCOME -. "manually investigates" .-> CASE_DATA
-  AFFORDABILITY -. "manually investigates" .-> CASE_DATA
-  MEETINGS -. "manually consults" .-> PLATFORMS
-  POLICY -. "searches" .-> DOCUMENTS
-  KNOWLEDGE -. "searches" .-> DOCUMENTS
-
-  style MANUAL_WORK stroke-dasharray: 5 5
+    UI --> API
+    State --> Auth
+    API -. "query" .-> Database
+    Auth -. "validate" .-> Database
