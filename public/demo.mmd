@@ -1,9 +1,11 @@
-flowchart TB
+flowchart LR
     subgraph Input [User Input]
+        direction TB
         Syntax[Enter Mermaid Syntax] --> Validation{Valid?}
     end
 
     subgraph Output [Rendering Pipeline]
+        direction TB
         Engine[ELK Layout Engine] --> SVG[Rendered SVG]
     end
 

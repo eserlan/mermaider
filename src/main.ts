@@ -41,13 +41,16 @@ import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
   let renderCount = 0;
   let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-  // Register ELK layout loaders and initialize mermaid as global default
+  // Register ELK layout loaders and initialize mermaid with dagre-wrapper default
+  (window as unknown as { mermaid: typeof mermaid }).mermaid = mermaid;
   mermaid.registerLayoutLoaders(elkLayouts);
   mermaid.initialize({
     startOnLoad: false,
     securityLevel: 'loose',
-    layout: 'elk',
-    flowchart: { defaultRenderer: 'elk' }
+    flowchart: {
+      defaultRenderer: 'dagre-wrapper',
+      htmlLabels: true
+    }
   });
 
   // Initialize theme controls

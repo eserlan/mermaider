@@ -1,8 +1,14 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ['elkjs/lib/elk.bundled.js', '@mermaid-js/layout-elk']
+  },
   build: {
     chunkSizeWarningLimit: 4000,
+    commonjsOptions: {
+      include: [/elkjs/, /node_modules/]
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {
