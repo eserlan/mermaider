@@ -1,8 +1,8 @@
 # Project: Mermaider
 
 ## Stack
-- Plain HTML5/CSS3
-- Vanilla JavaScript (ES Modules)
+- HTML5 / CSS3
+- TypeScript + Vite (Bun)
 - Mermaid.js (via CDN)
 
 ## Conventions

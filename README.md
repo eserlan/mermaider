@@ -1,34 +1,44 @@
 # Mermaider
 
-A plain HTML/JS Mermaid viewer styled with Tailwind CSS via the CDN build.
+A Mermaid viewer built with TypeScript, Vite, and Tailwind CSS.
 
 ## Project Structure
 
-- `index.html`: Main entry point and UI.
-- Tailwind utilities are applied directly in `index.html`.
+- `index.html`: Main entry point and UI markup.
+- `src/`: TypeScript application source code.
+  - `src/types.ts`: Interface definitions and window types.
+  - `src/theme.ts`: Dark mode state management and persistence.
+  - `src/export.ts`: Diagram PNG/SVG export and clipboard copying.
+  - `src/main.ts`: Application initialization, events, zoom/pan, and rendering logic.
+- `demo.mmd`: Default sample Mermaid diagram.
 
 ## Development
 
-Use a local static server so the app can fetch `demo.mmd` correctly:
+Install dependencies:
 
 ```bash
-# Using Python
-python3 -m http.server 8000
-
-# Using Node.js (npx)
-npx serve .
+bun install
 ```
 
-Then open the printed local URL in your browser.
-
-For a quick JavaScript syntax check of the inline app code:
+Start the Vite development server:
 
 ```bash
-node -e "const fs=require('fs'),vm=require('vm'); const html=fs.readFileSync('index.html','utf8'); const scripts=[...html.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)].map(m=>m[1]).filter(s=>s.trim()&&!s.includes('window.tailwind')); for (const s of scripts) new vm.Script(s); console.log('inline JavaScript syntax ok');"
+bun dev
+```
+
+Build for production (TypeScript type checking + Vite bundling):
+
+```bash
+bun run build
+```
+
+Preview the production build locally:
+
+```bash
+bun preview
 ```
 
 ## Tailwind
 
-This project currently uses the Tailwind CDN script, which is the quickest way to start using Tailwind in a static HTML file.
+This project uses the Tailwind CDN script configured with dark mode class support.
 
-If you later want a production-style setup with tree-shaken CSS, add a Node build step with `tailwindcss` and move the styles into a dedicated stylesheet.
