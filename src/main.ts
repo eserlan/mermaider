@@ -46,7 +46,6 @@ import { getExportSvg, getPngBlob, download, copyToClipboard } from './export';
     startOnLoad: false,
     securityLevel: 'loose',
     flowchart: {
-      defaultRenderer: 'dagre-wrapper',
       htmlLabels: true
     }
   });
