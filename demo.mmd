@@ -2,7 +2,6 @@ flowchart TB
   CLIENT(["👤 Web Client"])
 
   subgraph ENGINE["Core Application Engine"]
-    direction LR
     FE["frontend-app<br/><i>UI Shell — dispatches requests,<br/>renders responses</i>"]
     API["system-api<br/><i>Validates session,<br/>coordinates services,<br/>calls AI service</i>"]
   end
