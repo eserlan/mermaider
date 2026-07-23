@@ -1,21 +1,19 @@
-flowchart LR
-    subgraph Client [Web Application]
-        direction TB
-        UI[User Interface]
-        State[State Management]
-        UI ~~~ State
-    end
+flowchart TB
+  ADVISOR(["👤 Mortgage Advisor"])
 
-    subgraph Server [Backend System]
-        direction TB
-        API[REST API Service]
-        Auth[Authentication Engine]
-        API ~~~ Auth
-    end
+  subgraph MAIA_BOX["Mortgage Intelligence Engine — MAIA"]
+    direction LR
+    FE["maia-frontend<br/><i>Chat shell — sends messages,<br/>renders responses</i>"]
+    API["maia-system-api<br/><i>Validates advisor identity,<br/>manages conversation,<br/>filters PII, calls LLM</i>"]
+  end
 
-    Database[(Database Cluster)]
+  ADVISOR -->|"Sends message"| FE
+  DB[("PostgreSQL<br/><i>Conversation session store<br/></i>")]
+  FOMO["FOMO — Internal LLM Proxy<br/><i>Nordea's governed AI inference.<br/>Receives anonymised context only.</i>"]
 
-    UI --> API
-    State --> Auth
-    API -. "query" .-> Database
-    Auth -. "validate" .-> Database
+  FE -->|"Chat request"| API
+  API -->|"Reads / writes<br/>conversation turns"| DB
+  API -->|"Anonymised context +<br/>conversation history"| FOMO
+  FOMO -->|"LLM response"| API
+  API -->|"Grounded response +<br/>context limitations"| FE
+  ADVISOR <-.-|"Renders response<br/>with advisor framing"| FE
